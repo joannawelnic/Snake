@@ -105,7 +105,7 @@ void drawScene(GLFWwindow* window) {
 
     glUniform4f(spLambert->u("color"), 1.0f, 0.0f, 0.0f, 1.0f); // Czerwone jab³ko!
 
-    ModelResources::apple.drawSolid(true);
+    ModelResources::apple.drawSolid(true); // rysowanie jablka
 
     // Rysowanie kafelków
     int gridSize = 10;
@@ -146,7 +146,7 @@ int main() {
 
     initOpenGLProgram(window);  // Inicjalizacja shaderów i modeli
 
-    loadModels();  // £adowanie modeli i tekstur
+    //loadModels();  // £adowanie modeli i tekstur - znikaja inne modele przy tym
 
     glfwSetTime(0);
     while (!glfwWindowShouldClose(window)) {
