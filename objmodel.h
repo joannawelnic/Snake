@@ -6,21 +6,22 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "model.h"
-#include "tiny_obj_loader.h"
+//#include "tiny_obj_loader.h"
 
 namespace Models {
     class ObjModel : public Model {
     private:
-        GLuint vao, vbo;
 
     public:
         ObjModel();
+        ObjModel(const std::string& filename);
+        virtual ~ObjModel();
+        virtual void drawSolid(bool smooth = true);
         void load(const std::string& filename);
-        void drawSolid(bool smooth) override;
-        ~ObjModel();
 
         int vertexCount = 0;
     };
 }
 
 #endif
+
