@@ -1,4 +1,4 @@
-#define GLM_FORCE_RADIANS 
+#define GLM_FORCE_RADIANS
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -8,7 +8,6 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
-
 #include "constants.h"
 #include "allmodels.h"
 #include "shaderprogram.h"
@@ -16,6 +15,7 @@
 
 Snake snake(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 5); // Start, kierunek, d³ugoœæ
 glm::vec3 direction(1.0f, 0.0f, 0.0f);
+glm::vec3 applePosition(0.0f, 1.2f, 0.0f);
 
 float snakeSpeed = 2.0f;
 float movementTimer = 0.0f;
@@ -79,6 +79,30 @@ void drawApple(glm::vec3 position, ShaderProgram* spLambert, glm::mat4 P, glm::m
     glBindVertexArray(0);
 }
 
+void respawnApple(const Snake& snake) {
+    const int gridMin = -5;
+    const int gridMax = 5;
+
+    bool valid = false;
+    glm::vec3 newPos;
+
+    while (!valid) {
+        int x = rand() % (gridMax - gridMin) + gridMin;
+        int z = rand() % (gridMax - gridMin) + gridMin;
+        newPos = glm::vec3((float)x, 1.2f, (float)z);
+
+        valid = true;
+        for (const auto& segment : snake.getSegments()) {
+            if (glm::distance(segment.first, newPos) < 0.5f) {
+                valid = false;
+                break;
+            }
+        }
+    }
+
+    applePosition = newPos;
+}
+
 
 void drawScene(GLFWwindow* window) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -98,14 +122,14 @@ void drawScene(GLFWwindow* window) {
     // Rysowanie wê¿a
     snake.render(spLambert, true);
     //drawApple(glm::vec3(0, 0, 0), spLambert, P, V);
-    glm::mat4 M = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
-    M = glm::scale(M, glm::vec3(1.0f));  // Zamiast 0.5f
+    glm::mat4 M = glm::translate(glm::mat4(1.0f), applePosition);
+    M = glm::scale(M, glm::vec3(0.5f));  // Zamiast 0.5f
 
     glUniformMatrix4fv(spLambert->u("M"), 1, GL_FALSE, glm::value_ptr(M));
 
     glUniform4f(spLambert->u("color"), 1.0f, 0.0f, 0.0f, 1.0f); // Czerwone jab³ko!
 
-    ModelResources::apple.drawSolid(true); // rysowanie jablka 
+    ModelResources::apple.drawSolid(true); // rysowanie jablka
 
     // Rysowanie kafelków
     int gridSize = 10;
@@ -120,7 +144,7 @@ void drawScene(GLFWwindow* window) {
             //ModelResources::tile.drawTextured(true);
         }
     }
-    
+
     glfwSwapBuffers(window);
 }
 
@@ -137,6 +161,7 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
+    srand((unsigned int)time(0)); // Zainicjalizuj generator losowy - do wstawiania losowo jablek
     glfwSwapInterval(1);
 
     if (glewInit() != GLEW_OK) {
@@ -157,7 +182,13 @@ int main() {
         if (movementTimer >= 1.0f / snakeSpeed) {
             snake.setDirection(direction);
             snake.move(); // Ruch wê¿a co tick
-            // if (kolizja z jab³kiem) snake.grow();
+            // SprawdŸ kolizjê g³owy wê¿a z jab³kiem
+            glm::vec3 headPos = snake.getHeadPosition(); // Dodaj tê funkcjê do klasy Snake
+            if (glm::distance(headPos, applePosition) < 0.5f) { // Próg kolizji
+                snake.grow(); // Powiêksz wê¿a
+                respawnApple(snake); // Nowe jab³ko
+            }
+
             movementTimer = 0.0f;
         }
 
@@ -170,4 +201,3 @@ int main() {
     glfwTerminate();
     return 0;
 }
-
